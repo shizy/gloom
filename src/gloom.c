@@ -11,6 +11,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <fcntl.h>
+
 static long
 get_brightness (Display *dpy, Atom backlight, RROutput out) {
 
@@ -107,21 +109,23 @@ int main (int argc, char *argv[]) {
     XFlush(dpy);
     XEvent e;
 
-    unsigned int max_idle = (screen_idle > cursor_idle && screen_conf == 1) ? screen_idle : cursor_idle;
-    unsigned int idle = 1;
-    unsigned int dim = 0;
-    unsigned int cursor = 1;
+    unsigned int max_idle = (screen_idle > cursor_idle && screen_conf == 1) ? screen_idle : cursor_idle,
+                 idle = 1,
+                 dim = 0,
+                 cursor = 1;
 
     for (;;) {
 
         // hide cursor
-        if (cursor_conf == 1 && idle == cursor_idle) {
+        if (cursor_conf == 1 && cursor == 1 && idle == cursor_idle) {
             XFixesHideCursor(dpy, w);
+            //XFlush(dpy);
             cursor = 0;
+            printf("cursor hide\n");
         }
 
         // dim screen
-        if (screen_conf == 1 && idle == screen_idle) {
+        if (screen_conf == 1 && dim == 0 && idle == screen_idle) {
             brightness = get_brightness(dpy, backlight, resources->outputs[0]);
             set_brightness(dpy, backlight, resources->outputs[0], (brightness * (screen_fade / 100)));
             dim = 1;
@@ -138,7 +142,9 @@ int main (int argc, char *argv[]) {
             if (cursor_conf == 1 && cursor == 0 && (e.xcookie.evtype == XI_RawMotion ||
                 e.xcookie.evtype == XI_RawButtonPress)) {
                     XFixesShowCursor(dpy, w);
+                    XFlush(dpy);
                     cursor = 1;
+                    printf("cursor show\n");
             }
 
             // restore screen brightness
