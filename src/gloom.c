@@ -96,10 +96,8 @@ main (int argc, char *argv[]) {
          cursor = true,
          paused = false;
 
-    void pause() { paused = true; }
-    void resume() { paused = false; }
+    void pause() { paused = !paused; }
     signal(SIGUSR1, pause);
-    signal(SIGUSR2, resume);
 
     long brightness;
 

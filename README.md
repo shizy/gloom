@@ -31,6 +31,16 @@ $ gloom -a              # dim the backlight regardless of whether a battery is f
 $ gloom -h              # show usage help
 ```
 
+## Signals
+
+Sending a SIGUSR1 to gloom will prevent cursor hiding and screen dimming until another SIGUSR1 is sent:
+
+```bash
+$ kill -s SIGUSR1 $(pgrep gloom)
+```
+
+Useful to prevent the screen from dimming while watching a movie, etc.
+
 ## Examples
 
 To just hide the cursor after 10 seconds of idle time:
