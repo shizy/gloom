@@ -76,8 +76,8 @@ main (int argc, char *argv[]) {
 
     int current, arg_index = 0;
     unsigned int cursor_idle = 3,
-                 screen_idle = 30,
-                 screen_fade = 40,
+                 screen_idle = 45,
+                 screen_fade = 50,
                  battery_int = 5,
                  bidle = 0,
                  idle = 0;
