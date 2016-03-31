@@ -16,6 +16,24 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+void
+check_extensions (Display *dpy) {
+    int maj = 2,
+        min = 2,
+        opc = -1,
+        ev, err;
+
+    if (!XQueryExtension(dpy, "XInputExtension", &opc, &ev, &err)) {
+        printf("Extension XInput not found.");
+        exit(0);
+    }
+
+    if (XIQueryVersion(dpy, &maj, &min) != Success) {
+        printf("Extension XI2 not found, or unsupported version");
+        exit(0);
+    }
+}
+
 static long
 get_brightness (Display *dpy, Atom backlight, RROutput out) {
 
@@ -53,7 +71,8 @@ battery_status () {
     return (strcmp(stat, "Discharging") == 0) ? true : false;
 }
 
-int main (int argc, char *argv[]) {
+int
+main (int argc, char *argv[]) {
 
     int current, arg_index = 0;
     unsigned int cursor_idle = 3,
@@ -120,8 +139,9 @@ int main (int argc, char *argv[]) {
     Display *dpy = XOpenDisplay(NULL);
     if (!dpy) {
         printf("Cannot connect to the X Server\n");
-        return (1);
+        exit(0);
     }
+    check_extensions(dpy);
 
     Window w = DefaultRootWindow(dpy);
     Atom backlight = XInternAtom(dpy, "Backlight", True);
