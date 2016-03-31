@@ -1,7 +1,6 @@
 // gcc -o gloom gloom.c -lX11 -lXrandr -lXfixes -lXi
 // TODO
 // track mouse and screen seperately
-// add stop and start traps
 
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/Xfixes.h>
@@ -13,6 +12,7 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 #include <stdio.h>
 #include <fcntl.h>
 
@@ -87,7 +87,13 @@ main (int argc, char *argv[]) {
          battery_conf = true,
          battery = false,
          dim = false,
-         cursor = true;
+         cursor = true,
+         paused = false;
+
+    void pause() { paused = true; }
+    void resume() { paused = false; }
+    signal(SIGUSR1, pause);
+    signal(SIGUSR2, resume);
 
     long brightness;
 
@@ -171,62 +177,64 @@ main (int argc, char *argv[]) {
     for (;;) {
 
         (void) sleep(1);
-        idle++;
+        if (!paused) {
+            idle++;
 
-        // check battery status
-        if (battery_conf) {
+            // check battery status
+            if (battery_conf) {
 
-            bidle++;
+                bidle++;
 
-            if (bidle == battery_int) {
-                bool pre_battery = battery;
-                battery = battery_status();
-                // if going to battery, reset idle time to catch screen_idle
-                if (!pre_battery && battery) {
-                    idle = 0;
+                if (bidle == battery_int) {
+                    bool pre_battery = battery;
+                    battery = battery_status();
+                    // if going to battery, reset idle time to catch screen_idle
+                    if (!pre_battery && battery) {
+                        idle = 0;
+                    }
+                    // if going to AC, re-brighten the screen if dim
+                    if (pre_battery && !battery && screen_conf && dim) {
+                        set_brightness(dpy, backlight, resources->outputs[0], brightness);
+                        dim = false;
+                    }
+                    bidle = 0;
                 }
-                // if going to AC, re-brighten the screen if dim
-                if (pre_battery && !battery && screen_conf && dim) {
+            }
+
+            // hide cursor
+            if (cursor_conf && cursor && idle == cursor_idle) {
+                XFixesHideCursor(dpy, w);
+                XFlush(dpy);
+                cursor = false;
+            }
+
+            // dim screen
+            if (screen_conf && battery && !dim && idle == screen_idle) {
+                brightness = get_brightness(dpy, backlight, resources->outputs[0]);
+                set_brightness(dpy, backlight, resources->outputs[0], (brightness * (screen_fade / 100)));
+                dim = true;
+            }
+
+            // activity
+            while (XPending(dpy) > 0) {
+
+                // interrupt, wait for activity
+                XNextEvent(dpy, &e);
+                idle = 0;
+
+                // show cursor
+                if (cursor_conf && !cursor && (e.xcookie.evtype == XI_RawMotion ||
+                    e.xcookie.evtype == XI_RawButtonPress)) {
+                        XFixesShowCursor(dpy, w);
+                        XFlush(dpy);
+                        cursor = true;
+                }
+
+                // restore screen brightness
+                if (screen_conf && dim) {
                     set_brightness(dpy, backlight, resources->outputs[0], brightness);
                     dim = false;
                 }
-                bidle = 0;
-            }
-        }
-
-        // hide cursor
-        if (cursor_conf && cursor && idle == cursor_idle) {
-            XFixesHideCursor(dpy, w);
-            XFlush(dpy);
-            cursor = false;
-        }
-
-        // dim screen
-        if (screen_conf && battery && !dim && idle == screen_idle) {
-            brightness = get_brightness(dpy, backlight, resources->outputs[0]);
-            set_brightness(dpy, backlight, resources->outputs[0], (brightness * (screen_fade / 100)));
-            dim = true;
-        }
-
-        // activity
-        while (XPending(dpy) > 0) {
-
-            // interrupt, wait for activity
-            XNextEvent(dpy, &e);
-            idle = 0;
-
-            // show cursor
-            if (cursor_conf && !cursor && (e.xcookie.evtype == XI_RawMotion ||
-                e.xcookie.evtype == XI_RawButtonPress)) {
-                    XFixesShowCursor(dpy, w);
-                    XFlush(dpy);
-                    cursor = true;
-            }
-
-            // restore screen brightness
-            if (screen_conf && dim) {
-                set_brightness(dpy, backlight, resources->outputs[0], brightness);
-                dim = false;
             }
         }
     }
