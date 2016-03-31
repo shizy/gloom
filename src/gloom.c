@@ -1,4 +1,8 @@
 // gcc -o gloom gloom.c -lX11 -lXrandr -lXfixes -lXi
+// TODO
+// track mouse and screen seperately
+// add stop and start traps
+// dims on full battery charge?
 
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/Xfixes.h>
@@ -41,11 +45,11 @@ set_brightness (Display *dpy, Atom backlight, RROutput out, long brightness) {
 static bool
 battery_status () {
     FILE *f;
-    char stat[24];
+    char stat[12];
     f = fopen("/sys/class/power_supply/BAT0/status", "r");
-    fgets(stat, 24, f);
+    fgets(stat, 12, f);
     fclose(f);
-    return (strcmp(stat, "Discharging") != -1) ? true : false;
+    return (strcmp(stat, "Discharging") == 0) ? true : false;
 }
 
 int main (int argc, char *argv[]) {
