@@ -2,6 +2,12 @@
 // TODO
 // track mouse and screen seperately
 
+//libxrandr
+//libxfixes
+//libxi
+//xproto
+//libx11
+
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/Xfixes.h>
 #include <X11/extensions/XInput2.h>
