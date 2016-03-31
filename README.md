@@ -1,6 +1,6 @@
 # gloom
 
-gloom is an X11 backlight diming and cursor management tool for laptops. Aimed at saving battery life and getting rid of the annoying cursor when you don't need it.
+gloom is an X11 backlight dimming and cursor management tool for laptops. Aimed at saving battery life and getting rid of the annoying cursor when you don't need it.
 
 ## Installation
 
@@ -15,6 +15,7 @@ Then clone, build, and install:
 ```bash
 $ git clone https://github.com/shizy/gloom.git
 $ cd gloom
+$ make
 $ sudo make install
 ```
 
