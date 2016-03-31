@@ -2,7 +2,6 @@
 // TODO
 // track mouse and screen seperately
 // add stop and start traps
-// dims on full battery charge?
 
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/Xfixes.h>
@@ -46,7 +45,9 @@ static bool
 battery_status () {
     FILE *f;
     char stat[12];
-    f = fopen("/sys/class/power_supply/BAT0/status", "r");
+    if ((f = fopen("/sys/class/power_supply/BAT0/status", "r")) == NULL) {
+        return false;
+    }
     fgets(stat, 12, f);
     fclose(f);
     return (strcmp(stat, "Discharging") == 0) ? true : false;
@@ -139,7 +140,12 @@ int main (int argc, char *argv[]) {
     XEvent e;
 
     if (battery_conf) {
-        battery = battery_status();
+        // does a battery exist?
+        if (fopen("/sys/class/power_supply/BAT0/status", "r") == NULL) {
+            battery_conf = false;
+        } else {
+            battery = battery_status();
+        }
     }
 
     for (;;) {
