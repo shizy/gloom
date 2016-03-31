@@ -20,7 +20,7 @@ $ sudo make install
 
 ## Parameters
 
-The presense of -c will cause the cursor to hide. The presence of either -s or -l will cause the backlight to dim.
+The addition of -c will cause the cursor to hide. The addition of either -s or -l will cause the backlight to dim.
 
 ```bash
 $ gloom -c[n]           # hide the mouse cursor after [n] seconds of idle time (default 3)
@@ -44,5 +44,5 @@ $ gloom -c10 -s
 
 To dim the screen on a desktop PC after 1 minute to %15 of current brightness:
 ```bash
-$ gloom -s60 -l15
+$ gloom -s60 -l15 -a
 ```
