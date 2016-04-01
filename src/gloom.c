@@ -86,7 +86,8 @@ main (int argc, char *argv[]) {
                  screen_fade = 50,
                  battery_int = 5,
                  bidle = 0,
-                 idle = 0;
+                 kidle = 0,
+                 midle = 0;
 
     bool cursor_conf = false,
          screen_conf = false,
@@ -182,7 +183,8 @@ main (int argc, char *argv[]) {
 
         (void) sleep(1);
         if (!paused) {
-            idle++;
+            kidle++;
+            midle++;
 
             // check battery status
             if (battery_conf) {
@@ -194,7 +196,8 @@ main (int argc, char *argv[]) {
                     battery = battery_status();
                     // if going to battery, reset idle time to catch screen_idle
                     if (!pre_battery && battery) {
-                        idle = 0;
+                        kidle = 0;
+                        midle = 0;
                     }
                     // if going to AC, re-brighten the screen if dim
                     if (pre_battery && !battery && screen_conf && dim) {
@@ -206,14 +209,14 @@ main (int argc, char *argv[]) {
             }
 
             // hide cursor
-            if (cursor_conf && cursor && idle == cursor_idle) {
+            if (cursor_conf && cursor && midle == cursor_idle) {
                 XFixesHideCursor(dpy, w);
                 XFlush(dpy);
                 cursor = false;
             }
 
             // dim screen
-            if (screen_conf && battery && !dim && idle == screen_idle) {
+            if (screen_conf && battery && !dim && kidle == screen_idle) {
                 brightness = get_brightness(dpy, backlight, resources->outputs[0]);
                 set_brightness(dpy, backlight, resources->outputs[0], (brightness * (screen_fade / 100)));
                 dim = true;
@@ -224,7 +227,7 @@ main (int argc, char *argv[]) {
 
                 // interrupt, wait for activity
                 XNextEvent(dpy, &e);
-                idle = 0;
+                kidle = 0;
 
                 // show cursor
                 if (cursor_conf && !cursor && (e.xcookie.evtype == XI_RawMotion ||
@@ -232,6 +235,7 @@ main (int argc, char *argv[]) {
                         XFixesShowCursor(dpy, w);
                         XFlush(dpy);
                         cursor = true;
+                        midle = 0;
                 }
 
                 // restore screen brightness
