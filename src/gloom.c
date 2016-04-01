@@ -112,6 +112,7 @@ main (int argc, char *argv[]) {
         { "screen", optional_argument, 0, 's' },
         { "fadeto", optional_argument, 0, 'f' },
         { "lock", optional_argument, 0, 'l' },
+        { "locker", optional_argument, 0, 'k' },
         { "always", no_argument, 0, 'a' },
         { "help", no_argument, 0, 'h' },
         { 0, 0, 0, 0}
@@ -134,10 +135,15 @@ main (int argc, char *argv[]) {
                     screen_conf = true;
                     screen_idle = (optarg == NULL) ? screen_idle : strtol(optarg, NULL, 10);
                     break;
-                // set screen lock
+                // set lock timeout
                 case 'l':
                     lock_conf = true;
                     lock_idle = (optarg == NULL) ? lock_idle : strtol(optarg, NULL, 10);
+                    break;
+                // set locker
+                case 'k':
+                    lock_conf = true;
+                    // get locking script
                     break;
                 // set screen brightness
                 case 'f':
@@ -248,6 +254,7 @@ main (int argc, char *argv[]) {
                 // interrupt, wait for activity
                 XNextEvent(dpy, &e);
                 kidle = 0;
+                lidle = 0;
 
                 // show cursor
                 if (cursor_conf && !cursor && (e.xcookie.evtype == XI_RawMotion ||
