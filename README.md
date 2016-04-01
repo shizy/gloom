@@ -26,7 +26,7 @@ The addition of -c will cause the cursor to hide. The addition of either -s or -
 ```bash
 $ gloom -c[n]           # hide the mouse cursor after [n] seconds of idle time (default 3)
 $ gloom -s[n]           # dim the screen backlight after [n] seconds of idle time (default 45)
-$ gloom -l[percent]     # how much to dim the backlight, percentage of the current brightness level (default 50)
+$ gloom -f[percent]     # fade to percentage of the current brightness level (default 50)
 $ gloom -a              # dim the backlight regardless of whether a battery is found or not
 $ gloom -h              # show usage help
 ```
@@ -55,5 +55,5 @@ $ gloom -c10 -s
 
 To dim the screen on a desktop PC after 1 minute to %15 of current brightness:
 ```bash
-$ gloom -s60 -l15 -a
+$ gloom -s60 -f15 -a
 ```
