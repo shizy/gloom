@@ -1,12 +1,13 @@
-// gcc -o gloom gloom.c -lX11 -lXrandr -lXfixes -lXi
-// TODO
-// track mouse and screen seperately
-
-//libxrandr
-//libxfixes
-//libxi
-//xproto
-//libx11
+/*
+ * What had happened to him? Why was his brow clammy with drops of moisture,
+ * his knees shaking beneath him, and his soul oppressed with a cold gloom?
+ * Was it because he had just seen these dreadful eyes again? Why, he had
+ * left the Summer Garden on purpose to see them; that had been his "idea."
+ * He had wished to assure himself that he would see them once more at that
+ * house. Then why was he so overwhelmed now, having seen them as he expected?
+ *
+ * "The Idiot" (pt. II, ch. V) - Fyodor Dostoevsky
+ */
 
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/Xfixes.h>
@@ -105,7 +106,7 @@ main (int argc, char *argv[]) {
     static struct option long_options[] = {
         { "cursor", optional_argument, 0, 'c' },
         { "screen", optional_argument, 0, 's' },
-        { "level", optional_argument, 0, 'l' },
+        { "fadeto", optional_argument, 0, 'f' },
         { "always", no_argument, 0, 'a' },
         { "help", no_argument, 0, 'h' },
         { 0, 0, 0, 0}
@@ -129,7 +130,7 @@ main (int argc, char *argv[]) {
                     screen_idle = (optarg == NULL) ? screen_idle : strtol(optarg, NULL, 10);
                     break;
                 // set screen brightness
-                case 'l':
+                case 'f':
                     screen_conf = true;
                     screen_fade = (optarg == NULL) ? screen_fade : strtol(optarg, NULL, 10);
                     break;
@@ -141,7 +142,7 @@ main (int argc, char *argv[]) {
                 // show help
                 case 'h':
                 default:
-                    printf("Usage: gloom [-c|--cursor <secs>] [-s|--screen <secs>] [-l|--level <brightness percent> ] [-a|--always] [-h|--help]");
+                    printf("Usage: gloom [-c|--cursor <secs>] [-s|--screen <secs>] [-f|--fadeto <brightness percent> ] [-a|--always] [-h|--help]");
                     break;
             }
         }
