@@ -85,17 +85,21 @@ main (int argc, char *argv[]) {
     unsigned int cursor_idle = 3,
                  screen_idle = 45,
                  screen_fade = 50,
+                 lock_idle = 600,
                  battery_int = 5,
                  bidle = 0,
                  kidle = 0,
+                 lidle = 0,
                  midle = 0;
 
     bool cursor_conf = false,
          screen_conf = false,
+         lock_conf = false,
          battery_conf = true,
          battery = false,
          dim = false,
          cursor = true,
+         locked = false,
          paused = false;
 
     void pause() { paused = !paused; }
@@ -107,6 +111,7 @@ main (int argc, char *argv[]) {
         { "cursor", optional_argument, 0, 'c' },
         { "screen", optional_argument, 0, 's' },
         { "fadeto", optional_argument, 0, 'f' },
+        { "lock", optional_argument, 0, 'l' },
         { "always", no_argument, 0, 'a' },
         { "help", no_argument, 0, 'h' },
         { 0, 0, 0, 0}
@@ -128,6 +133,11 @@ main (int argc, char *argv[]) {
                 case 's':
                     screen_conf = true;
                     screen_idle = (optarg == NULL) ? screen_idle : strtol(optarg, NULL, 10);
+                    break;
+                // set screen lock
+                case 'l':
+                    lock_conf = true;
+                    lock_idle = (optarg == NULL) ? lock_idle : strtol(optarg, NULL, 10);
                     break;
                 // set screen brightness
                 case 'f':
@@ -183,9 +193,12 @@ main (int argc, char *argv[]) {
     for (;;) {
 
         (void) sleep(1);
+
         if (!paused) {
+
             kidle++;
             midle++;
+            if (lock_conf) { lidle++; }
 
             // check battery status
             if (battery_conf) {
@@ -221,6 +234,12 @@ main (int argc, char *argv[]) {
                 brightness = get_brightness(dpy, backlight, resources->outputs[0]);
                 set_brightness(dpy, backlight, resources->outputs[0], (brightness * (screen_fade / 100)));
                 dim = true;
+            }
+
+            // lock screen
+            if (lock_conf && !locked && lidle == lock_idle) {
+                // lock screen function
+                locked = true;
             }
 
             // activity
