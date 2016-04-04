@@ -16,7 +16,6 @@
 #include <X11/Xlib.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <getopt.h>
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
@@ -81,7 +80,8 @@ battery_status () {
 int
 main (int argc, char *argv[]) {
 
-    int current, arg_index = 0;
+    //execl("/bin/sh", "/bin/sh", "/usr/sbin/i3lock-fancy", NULL);
+
     unsigned int cursor_idle = 3,
                  screen_idle = 45,
                  screen_fade = 50,
@@ -98,70 +98,59 @@ main (int argc, char *argv[]) {
          battery_conf = true,
          battery = false,
          dim = false,
-         cursor = true,
+         cursor = true, // check first?
          locked = false,
          paused = false;
+
+    char locker[256] = "";
 
     void pause() { paused = !paused; }
     signal(SIGUSR1, pause);
 
     long brightness;
 
-    static struct option long_options[] = {
-        { "cursor", optional_argument, 0, 'c' },
-        { "screen", optional_argument, 0, 's' },
-        { "fadeto", optional_argument, 0, 'f' },
-        { "lock", optional_argument, 0, 'l' },
-        { "locker", optional_argument, 0, 'k' },
-        { "always", no_argument, 0, 'a' },
-        { "help", no_argument, 0, 'h' },
-        { 0, 0, 0, 0}
-    };
-
-    if (argc == 1) {
-        printf("Too few arguments! -h for help\n");
-        return (1);
-    } else {
-        while ((current = getopt_long(argc, argv, "c::s::l::ah", long_options, &arg_index)) != -1) {
-
-            switch (current) {
-                // set cursor timeout
-                case 'c':
-                    cursor_conf = true;
-                    cursor_idle = (optarg == NULL) ? cursor_idle : strtol(optarg, NULL, 10);
-                    break;
-                // set screen timeout
-                case 's':
-                    screen_conf = true;
-                    screen_idle = (optarg == NULL) ? screen_idle : strtol(optarg, NULL, 10);
-                    break;
-                // set lock timeout
-                case 'l':
-                    lock_conf = true;
-                    lock_idle = (optarg == NULL) ? lock_idle : strtol(optarg, NULL, 10);
-                    break;
-                // set locker
-                case 'k':
-                    lock_conf = true;
-                    // get locking script
-                    break;
-                // set screen brightness
-                case 'f':
-                    screen_conf = true;
-                    screen_fade = (optarg == NULL) ? screen_fade : strtol(optarg, NULL, 10);
-                    break;
-                // always dim
-                case 'a':
-                    battery_conf = false;
-                    battery = true;
-                    break;
-                // show help
-                case 'h':
-                default:
-                    printf("Usage: gloom [-c|--cursor <secs>] [-s|--screen <secs>] [-f|--fadeto <brightness percent> ] [-a|--always] [-h|--help]");
-                    break;
-            }
+    for (int i = 1; i < argc; i++) {
+        // set cursor timeout
+        if (!strcmp(argv[i], "-c")) {
+            cursor_conf = true;
+            cursor_idle = (optarg == NULL) ? cursor_idle : strtol(optarg, NULL, 10);
         }
+        // set screen timeout
+        if (!strcmp(argv[i], "-s")) {
+            screen_conf = true;
+            screen_idle = (optarg == NULL) ? screen_idle : strtol(optarg, NULL, 10);
+        }
+        // set locker timeout
+        if (!strcmp(argv[i], "-l")) {
+            lock_conf = true;
+            lock_idle = (optarg == NULL) ? lock_idle : strtol(optarg, NULL, 10);
+        }
+
+        // set brightness
+        if (!strcmp(argv[i], "-f")) {
+            screen_conf = true;
+            screen_fade = (optarg == NULL) ? screen_fade : strtol(optarg, NULL, 10);
+        }
+        // set locker
+        if (!strcmp(argv[i], "-k")) {
+            lock_conf = true;
+            strcpy(locker, argv[++i]);
+        }
+        // set always dim
+        if (!strcmp(argv[i], "-a")) {
+            battery_conf = false;
+            battery = true;
+        }
+
+        // show help
+        if (!strcmp(argv[i], "-h")) {
+            printf("Usage: gloom [-c <cursor timeout>] [-s <screen timeout>] [-l <lock timeout>] [-f <brightness percent>] [-k <command>] [-a] [-h]");
+            exit(0);
+        }
+    }
+    if (lock_conf && !strcmp(locker, "")) {
+        printf("Error: -l requires a locker to be set with -k\n");
+        exit(0);
     }
 
     Display *dpy = XOpenDisplay(NULL);
