@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <wait.h>
 
 void
 check_extensions (Display *dpy) {
@@ -81,27 +82,27 @@ battery_status () {
 int
 main (int argc, char *argv[]) {
 
-    //execl("/bin/sh", "/bin/sh", "/usr/sbin/i3lock-fancy", NULL);
+    pid_t lpid;
 
     unsigned int cursor_idle = 3,
                  screen_idle = 45,
                  screen_fade = 50,
-                 lock_idle = 600,
+                 lock_idle   = 600,
                  battery_int = 5,
-                 bidle = 0,
-                 kidle = 0,
-                 lidle = 0,
-                 midle = 0;
+                 bidle       = 0,
+                 kidle       = 0,
+                 lidle       = 0,
+                 midle       = 0;
 
-    bool cursor_conf = false,
-         screen_conf = false,
-         lock_conf = false,
+    bool cursor_conf  = false,
+         screen_conf  = false,
+         lock_conf    = false,
          battery_conf = true,
-         battery = false,
-         dim = false,
-         cursor = true, // check first?
-         locked = false,
-         paused = false;
+         battery      = false,
+         dim          = false,
+         cursor       = true, // check first?
+         locked       = false,
+         paused       = false;
 
     char locker[256] = "";
 
@@ -199,6 +200,7 @@ main (int argc, char *argv[]) {
             kidle++;
             midle++;
             if (lock_conf) { lidle++; }
+            printf("%i\n", kidle);
 
             // check battery status
             if (battery_conf) {
@@ -238,8 +240,14 @@ main (int argc, char *argv[]) {
 
             // lock screen
             if (lock_conf && !locked && lidle == lock_idle) {
-                // lock screen function
                 locked = true;
+                lpid = fork();
+                if (lpid == 0) {
+                    system(locker);
+                    locked = false;
+                    lidle = 0;
+                    _exit(0);
+                }
             }
 
             // activity
