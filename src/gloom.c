@@ -114,27 +114,31 @@ main (int argc, char *argv[]) {
         // set cursor timeout
         if (!strcmp(argv[i], "-c")) {
             cursor_conf = true;
-            cursor_idle = (!isdigit(argv[i + 1])) ? cursor_idle : strtol(argv[++i], NULL, 10);
+            cursor_idle = (argc <= i + 1 || !isdigit((unsigned char) *argv[i + 1])) ? cursor_idle : strtol(argv[++i], NULL, 10);
         }
         // set screen timeout
         if (!strcmp(argv[i], "-s")) {
             screen_conf = true;
-            screen_idle = (!isdigit(argv[i + 1])) ? screen_idle : strtol(argv[++i], NULL, 10);
+            screen_idle = (argc <= i + 1 || !isdigit((unsigned char) *argv[i + 1])) ? screen_idle : strtol(argv[++i], NULL, 10);
         }
         // set locker timeout
         if (!strcmp(argv[i], "-l")) {
             lock_conf = true;
-            lock_idle = (!isdigit(argv[i + 1])) ? lock_idle : strtol(argv[++i], NULL, 10);
+            lock_idle = (argc <= i + 1 || !isdigit((unsigned char) *argv[i + 1])) ? lock_idle : strtol(argv[++i], NULL, 10);
         }
 
         // set brightness
         if (!strcmp(argv[i], "-f")) {
             screen_conf = true;
-            screen_fade = (!isdigit(argv[i + 1])) ? screen_fade : strtol(argv[++i], NULL, 10);
+            screen_fade = (argc <= i + 1 || !isdigit((unsigned char) *argv[i + 1])) ? screen_fade : strtol(argv[++i], NULL, 10);
         }
         // set locker
         if (!strcmp(argv[i], "-k")) {
             lock_conf = true;
+            if (argc <= i + 1) {
+                printf("Error: -k requires an argument\n");
+                exit(0);
+            }
             strcpy(locker, argv[++i]);
         }
         // set always dim
