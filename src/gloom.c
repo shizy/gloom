@@ -20,6 +20,7 @@
 #include <string.h>
 #include <signal.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <fcntl.h>
 
 void
@@ -113,23 +114,23 @@ main (int argc, char *argv[]) {
         // set cursor timeout
         if (!strcmp(argv[i], "-c")) {
             cursor_conf = true;
-            cursor_idle = (optarg == NULL) ? cursor_idle : strtol(optarg, NULL, 10);
+            cursor_idle = (!isdigit(argv[i + 1])) ? cursor_idle : strtol(argv[++i], NULL, 10);
         }
         // set screen timeout
         if (!strcmp(argv[i], "-s")) {
             screen_conf = true;
-            screen_idle = (optarg == NULL) ? screen_idle : strtol(optarg, NULL, 10);
+            screen_idle = (!isdigit(argv[i + 1])) ? screen_idle : strtol(argv[++i], NULL, 10);
         }
         // set locker timeout
         if (!strcmp(argv[i], "-l")) {
             lock_conf = true;
-            lock_idle = (optarg == NULL) ? lock_idle : strtol(optarg, NULL, 10);
+            lock_idle = (!isdigit(argv[i + 1])) ? lock_idle : strtol(argv[++i], NULL, 10);
         }
 
         // set brightness
         if (!strcmp(argv[i], "-f")) {
             screen_conf = true;
-            screen_fade = (optarg == NULL) ? screen_fade : strtol(optarg, NULL, 10);
+            screen_fade = (!isdigit(argv[i + 1])) ? screen_fade : strtol(argv[++i], NULL, 10);
         }
         // set locker
         if (!strcmp(argv[i], "-k")) {
