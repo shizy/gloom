@@ -41,7 +41,17 @@ Sending a SIGUSR1 to gloom will prevent cursor hiding and screen dimming until a
 $ kill -s SIGUSR1 $(pgrep gloom)
 ```
 
-Useful to prevent the screen from dimming while watching a movie, etc.
+Sending a SIGUSR2 to gloom will prevent the lockscreen from initiating until another SIGUSR2 is sent:
+
+```bash
+$ kill -s SIGUSR2 $(pgrep gloom)
+```
+
+Useful to prevent the screen from dimming/locking while watching a movie, etc. Sending a SIGTSTP to gloom will cause the screen light to run immediatly:
+
+```bash
+$ kill -s SIGTSTP $(pgrep gloom)
+```
 
 ## Examples
 
@@ -55,7 +65,7 @@ To hide the cursor after 10 seconds, and dim the screen after the default 45 sec
 $ gloom -c 10 -s
 ```
 
-To force dim the screen on a desktop PC after 1 minute to %15 of current brightness:
+To force dim the screen on a desktop PC (with no battery) after 1 minute to %15 of current brightness:
 ```bash
 $ gloom -s 60 -f 15 -a
 ```
@@ -65,6 +75,6 @@ To hide the cursor after the default 3 seconds, dim the screen after 2 minutes, 
 $ gloom -c 3 -s 180 -l 300 -k "i3lock-fancy -p"
 ```
 
-## Lock Screens Recommendations
+## Lock Screens
 
 * [i3lock-fancy](https://github.com/meskarune/i3lock-fancy)
