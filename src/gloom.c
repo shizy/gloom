@@ -14,6 +14,7 @@
 #include <X11/extensions/XInput2.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
+#include <sys/mman.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -101,8 +102,8 @@ main (int argc, char *argv[]) {
          battery      = false,
          dim          = false,
          cursor       = true, // check first?
-         locked       = false,
-         paused       = false;
+         paused       = false,
+         *locked;
 
     char locker[256] = "";
 
@@ -182,13 +183,19 @@ main (int argc, char *argv[]) {
     XFlush(dpy);
     XEvent e;
 
+    // does a battery exist?
     if (battery_conf) {
-        // does a battery exist?
         if (fopen("/sys/class/power_supply/BAT0/status", "r") == NULL) {
             battery_conf = false;
         } else {
             battery = battery_status();
         }
+    }
+
+    // shared variable for forked lock process
+    if (lock_conf) {
+        locked = mmap(NULL, sizeof *locked, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+        *locked = false;
     }
 
     for (;;) {
@@ -200,7 +207,6 @@ main (int argc, char *argv[]) {
             kidle++;
             midle++;
             if (lock_conf) { lidle++; }
-            printf("%i\n", kidle);
 
             // check battery status
             if (battery_conf) {
@@ -239,14 +245,15 @@ main (int argc, char *argv[]) {
             }
 
             // lock screen
-            if (lock_conf && !locked && lidle == lock_idle) {
-                locked = true;
+            if (lock_conf && !*locked && lidle == lock_idle) {
                 lpid = fork();
                 if (lpid == 0) {
+                    /* Child process */
+                    *locked = true;
                     system(locker);
-                    locked = false;
-                    lidle = 0;
+                    *locked = false;
                     _exit(0);
+                    /* End child process */
                 }
             }
 
@@ -276,6 +283,7 @@ main (int argc, char *argv[]) {
         }
     }
 
+    munmap(locked, sizeof *locked);
     XRRFreeScreenResources(resources);
     return 0;
 }
