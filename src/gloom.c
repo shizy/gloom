@@ -214,6 +214,7 @@ main (int argc, char *argv[]) {
     signal(SIGUSR1, dimpause);
     signal(SIGUSR2, lockpause);
     signal(SIGTSTP, lock);
+    signal(SIGCHLD, SIG_IGN);
 
     for (;;) {
 
