@@ -55,7 +55,7 @@ To hide the cursor after 10 seconds, and dim the screen after the default 45 sec
 $ gloom -c 10 -s
 ```
 
-To dim the screen on a desktop PC after 1 minute to %15 of current brightness:
+To force dim the screen on a desktop PC after 1 minute to %15 of current brightness:
 ```bash
 $ gloom -s 60 -f 15 -a
 ```
