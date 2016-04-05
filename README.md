@@ -21,7 +21,7 @@ $ sudo make install
 
 ## Parameters
 
-The addition of -c will cause the cursor to hide. The addition of either -s or -l will cause the backlight to dim.
+The addition of -c will cause the cursor to hide. The addition of either -s or -f will cause the backlight to dim.
 
 ```bash
 $ gloom -c [n]           # hide the mouse cursor after [n] seconds of idle time (default 3)
