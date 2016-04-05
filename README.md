@@ -47,7 +47,7 @@ Sending a SIGUSR2 to gloom will prevent the lockscreen from initiating until ano
 $ kill -s SIGUSR2 $(pgrep gloom)
 ```
 
-Useful to prevent the screen from dimming/locking while watching a movie, etc. Sending a SIGTSTP to gloom will cause the screen light to run immediatly:
+Useful to prevent the screen from dimming/locking while watching a movie, etc. Sending a SIGTSTP to gloom will cause the screen lock to run immediatly:
 
 ```bash
 $ kill -s SIGTSTP $(pgrep gloom)
