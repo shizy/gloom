@@ -9,6 +9,8 @@
  * "The Idiot" (pt. II, ch. V) - Fyodor Dostoevsky
  */
 
+// check cursor state on startup (avoid dual hide issue)
+
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/Xfixes.h>
 #include <X11/extensions/XInput2.h>
@@ -102,14 +104,11 @@ main (int argc, char *argv[]) {
          battery      = false,
          dim          = false,
          cursor       = true, // check first?
-         paused       = false,
+         dimpaused    = false,
+         lockpaused   = false,
          *locked;
 
     char locker[256] = "";
-
-    void pause() { paused = !paused; }
-    signal(SIGUSR1, pause);
-
     long brightness;
 
     for (int i = 1; i < argc; i++) {
@@ -198,87 +197,96 @@ main (int argc, char *argv[]) {
         *locked = false;
     }
 
+    // setup traps for signals
+    void dimpause() { dimpaused = !dimpaused; }
+    void lockpause() { lockpaused = !lockpaused; }
+    void lock() {
+        lpid = fork();
+        if (lpid == 0) {
+            /* Child process */
+            *locked = true;
+            system(locker);
+            *locked = false;
+            _exit(0);
+            /* End child process */
+        }
+    }
+    signal(SIGUSR1, dimpause);
+    signal(SIGUSR2, lockpause);
+    signal(SIGTSTP, lock);
+
     for (;;) {
 
         (void) sleep(1);
 
-        if (!paused) {
-
+        // is screen dimming paused?
+        if (!dimpaused) {
             kidle++;
             midle++;
-            if (lock_conf) { lidle++; }
+        }
+        // is locking configured or paused?
+        if (lock_conf && !lockpaused) { lidle++; }
 
-            // check battery status
-            if (battery_conf) {
+        // check battery status
+        if (battery_conf) {
 
-                bidle++;
+            bidle++;
 
-                if (bidle == battery_int) {
-                    bool pre_battery = battery;
-                    battery = battery_status();
-                    // if going to battery, reset idle time to catch screen_idle
-                    if (!pre_battery && battery) {
-                        kidle = 0;
-                        midle = 0;
-                    }
-                    // if going to AC, re-brighten the screen if dim
-                    if (pre_battery && !battery && screen_conf && dim) {
-                        set_brightness(dpy, backlight, resources->outputs[0], brightness);
-                        dim = false;
-                    }
-                    bidle = 0;
+            if (bidle == battery_int) {
+                bool pre_battery = battery;
+                battery = battery_status();
+                // if going to battery, reset idle time to catch screen_idle
+                if (!pre_battery && battery) {
+                    kidle = 0;
+                    midle = 0;
                 }
-            }
-
-            // hide cursor
-            if (cursor_conf && cursor && midle == cursor_idle) {
-                XFixesHideCursor(dpy, w);
-                XFlush(dpy);
-                cursor = false;
-            }
-
-            // dim screen
-            if (screen_conf && battery && !dim && kidle == screen_idle) {
-                brightness = get_brightness(dpy, backlight, resources->outputs[0]);
-                set_brightness(dpy, backlight, resources->outputs[0], (brightness * (screen_fade / 100)));
-                dim = true;
-            }
-
-            // lock screen
-            if (lock_conf && !*locked && lidle == lock_idle) {
-                lpid = fork();
-                if (lpid == 0) {
-                    /* Child process */
-                    *locked = true;
-                    system(locker);
-                    *locked = false;
-                    _exit(0);
-                    /* End child process */
-                }
-            }
-
-            // activity
-            while (XPending(dpy) > 0) {
-
-                // interrupt, wait for activity
-                XNextEvent(dpy, &e);
-                kidle = 0;
-                lidle = 0;
-
-                // show cursor
-                if (cursor_conf && !cursor && (e.xcookie.evtype == XI_RawMotion ||
-                    e.xcookie.evtype == XI_RawButtonPress)) {
-                        XFixesShowCursor(dpy, w);
-                        XFlush(dpy);
-                        cursor = true;
-                        midle = 0;
-                }
-
-                // restore screen brightness
-                if (screen_conf && dim) {
+                // if going to AC, re-brighten the screen if dim
+                if (pre_battery && !battery && screen_conf && dim) {
                     set_brightness(dpy, backlight, resources->outputs[0], brightness);
                     dim = false;
                 }
+                bidle = 0;
+            }
+        }
+
+        // hide cursor
+        if (cursor_conf && cursor && midle == cursor_idle) {
+            XFixesHideCursor(dpy, w);
+            XFlush(dpy);
+            cursor = false;
+        }
+
+        // dim screen
+        if (screen_conf && battery && !dim && kidle == screen_idle) {
+            brightness = get_brightness(dpy, backlight, resources->outputs[0]);
+            set_brightness(dpy, backlight, resources->outputs[0], (brightness * (screen_fade / 100)));
+            dim = true;
+        }
+
+        // lock screen
+        if (lock_conf && !*locked && lidle == lock_idle) { lock(); }
+
+        // activity
+        while (XPending(dpy) > 0) {
+
+            // interrupt, wait for activity
+            XNextEvent(dpy, &e);
+            kidle = 0;
+            lidle = 0;
+
+            // show cursor
+            if (cursor_conf && !cursor && (e.xcookie.evtype == XI_RawMotion ||
+                e.xcookie.evtype == XI_RawButtonPress)) {
+                    XFixesShowCursor(dpy, w);
+                    XFlush(dpy);
+                    cursor = true;
+                    midle = 0;
+            }
+
+            // restore screen brightness
+            if (screen_conf && dim) {
+                set_brightness(dpy, backlight, resources->outputs[0], brightness);
+                dim = false;
             }
         }
     }
