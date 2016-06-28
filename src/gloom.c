@@ -293,6 +293,7 @@ main (int argc, char *argv[]) {
     }
 
     munmap(locked, sizeof *locked);
+    XCloseDisplay(dpy);
     XRRFreeScreenResources(resources);
     return 0;
 }
