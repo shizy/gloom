@@ -150,7 +150,7 @@ main (int argc, char *argv[]) {
 
         // show help
         if (!strcmp(argv[i], "-h")) {
-            printf("Usage: gloom [-c <cursor timeout>] [-s <screen timeout>] [-l <lock timeout>] [-f <brightness percent>] [-k <command>] [-a] [-h]");
+            printf("Usage: gloom [-c <cursor timeout>] [-s <screen timeout>] [-l <lock timeout>] [-f <brightness percent>] [-k <command>] [-a] [-h]\n");
             exit(0);
         }
     }
