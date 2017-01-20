@@ -167,7 +167,7 @@ main (int argc, char *argv[]) {
     check_extensions(dpy);
 
     Window w = DefaultRootWindow(dpy);
-    Atom backlight = XInternAtom(dpy, "Backlight", True);
+    Atom backlight = XInternAtom(dpy, RR_PROPERTY_BACKLIGHT, True);
     XRRScreenResources *resources = XRRGetScreenResources(dpy, w);
     XIEventMask masks[1];
     unsigned char mask[(XI_LASTEVENT + 7)/8];
@@ -260,7 +260,7 @@ main (int argc, char *argv[]) {
         // dim screen
         if (screen_conf && battery && !dim && kidle == screen_idle) {
             brightness = get_brightness(dpy, backlight, resources->outputs[0]);
-            set_brightness(dpy, backlight, resources->outputs[0], (brightness * (screen_fade / 100)));
+            set_brightness(dpy, backlight, resources->outputs[0], (brightness * screen_fade) / 100);
             dim = true;
         }
 
