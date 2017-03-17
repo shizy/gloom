@@ -54,8 +54,10 @@ get_brightness (Display *dpy, Atom backlight, RROutput out) {
     int format;
     Atom type;
 
-    if (XRRGetOutputProperty(dpy, out, backlight, 0, 4, False, False, None, &type, &format, &items, &after, &property) != Success) {
-        return 1;
+    if (backlight == None || XRRGetOutputProperty(dpy, out, backlight, 0, 4, False, False, AnyPropertyType, &type, &format, &items, &after, &property) != Success) {
+        // fallback to dim screen by default value if Atom was not generated properly or brightness value was not gathered correctly.
+        printf("Error getting current backlight information\n");
+        return -1;
     }
 
     brightness = *((long *) property);
@@ -167,7 +169,7 @@ main (int argc, char *argv[]) {
     check_extensions(dpy);
 
     Window w = DefaultRootWindow(dpy);
-    Atom backlight = XInternAtom(dpy, RR_PROPERTY_BACKLIGHT, True);
+    Atom backlight = XInternAtom(dpy, RR_PROPERTY_BACKLIGHT, False);
     XRRScreenResources *resources = XRRGetScreenResources(dpy, w);
     XIEventMask masks[1];
     unsigned char mask[(XI_LASTEVENT + 7)/8];
@@ -243,8 +245,10 @@ main (int argc, char *argv[]) {
                 }
                 // if going to AC, re-brighten the screen if dim
                 if (pre_battery && !battery && screen_conf && dim) {
-                    set_brightness(dpy, backlight, resources->outputs[0], brightness);
-                    dim = false;
+                    if (brightness > -1) {
+                        set_brightness(dpy, backlight, resources->outputs[0], brightness);
+                        dim = false;
+                    }
                 }
                 bidle = 0;
             }
@@ -260,9 +264,11 @@ main (int argc, char *argv[]) {
         // dim screen
         if (screen_conf && battery && !dim && kidle == screen_idle) {
             brightness = get_brightness(dpy, backlight, resources->outputs[0]);
-            brightness = (brightness > 0) ? (brightness * screen_fade) / 100 : 0;
-            set_brightness(dpy, backlight, resources->outputs[0], brightness);
-            dim = true;
+            if (brightness > -1) {
+                long new_brightness = (brightness > 0) ? (brightness * screen_fade) / 100 : 0;
+                set_brightness(dpy, backlight, resources->outputs[0], new_brightness);
+                dim = true;
+            }
         }
 
         // lock screen
@@ -287,8 +293,10 @@ main (int argc, char *argv[]) {
 
             // restore screen brightness
             if (screen_conf && dim) {
-                set_brightness(dpy, backlight, resources->outputs[0], brightness);
-                dim = false;
+                if (brightness > -1) {
+                    set_brightness(dpy, backlight, resources->outputs[0], brightness);
+                    dim = false;
+                }
             }
         }
     }
