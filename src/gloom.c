@@ -55,7 +55,7 @@ get_brightness (Display *dpy, Atom backlight, RROutput out) {
     Atom type;
 
     if (XRRGetOutputProperty(dpy, out, backlight, 0, 4, False, False, None, &type, &format, &items, &after, &property) != Success) {
-        return -1;
+        return 1;
     }
 
     brightness = *((long *) property);
@@ -260,7 +260,8 @@ main (int argc, char *argv[]) {
         // dim screen
         if (screen_conf && battery && !dim && kidle == screen_idle) {
             brightness = get_brightness(dpy, backlight, resources->outputs[0]);
-            set_brightness(dpy, backlight, resources->outputs[0], (brightness * screen_fade) / 100);
+            brightness = (brightness > 0) ? (brightness * screen_fade) / 100 : 0;
+            set_brightness(dpy, backlight, resources->outputs[0], brightness);
             dim = true;
         }
 
